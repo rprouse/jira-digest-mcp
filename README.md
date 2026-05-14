@@ -97,7 +97,7 @@ which is correct — interrupt with Ctrl-C when done):
 ```powershell
 $env:JIRA_USERNAME = "you@example.com"
 $env:JIRA_API_TOKEN = "..."
-uv run --directory D:\src\AI\jira-digest-mcp jira-digest-mcp
+uv run --project D:\src\AI\jira-digest-mcp jira-digest-mcp
 ```
 
 Set `$env:LOG_LEVEL = "DEBUG"` to see request-level logs on stderr.
@@ -114,7 +114,7 @@ installed copy:
       "command": "uv",
       "args": [
         "run",
-        "--directory",
+        "--project",
         "D:\\src\\AI\\jira-digest-mcp",
         "jira-digest-mcp"
       ],
