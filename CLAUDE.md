@@ -26,7 +26,7 @@ To run the server against the dev checkout from an MCP client, use `uv run --pro
 Four modules under `src/jira_digest_mcp/`, each with one responsibility:
 
 - `jql.py` — **pure functions, no I/O.** Parses `since` / `until` (ISO `YYYY-MM-DD` or relative offsets like `-7d` / `-2w`) and builds the JQL string. Anything date- or query-shape-related belongs here, not in the client or server.
-- `models.py` — `ResolvedIssue` Pydantic model + `from_raw()` that flattens the verbose Jira REST issue payload into the lean response shape. The `_get()` helper safely walks nested dicts; new fields should follow the same `_get(fields, "x", "y")` pattern rather than chained `.get()` calls.
+- `models.py` — Response-shape models and pure transforms over them. `ResolvedIssue.from_raw()` flattens the verbose Jira REST issue payload via the `_get()` nested-dict walker (use that pattern for new fields, not chained `.get()` calls). `ResolvedIssuesResponse.from_issues()` wraps a list with `total_count` and `epic_rollup` (per-`parent_key` aggregates that track `unestimated_count` separately so unpointed work doesn't get silently summed as zero). New aggregate/derived fields belong here, not in `server.py`.
 - `jira_client.py` — async `httpx` client. Two important behaviors:
   1. **Per-site Story Points field discovery.** Atlassian assigns each custom field a different `customfield_XXXXX` ID per site, so the client looks up `/rest/api/3/field` once per `base_url`, matches by name (case-insensitive "story points"), and caches the result. `None` is cached too, meaning "looked, doesn't exist here" — don't re-query on misses.
   2. **Pagination via `nextPageToken`** against `/rest/api/3/search/jql` (the newer endpoint, not the deprecated `/search`). The `max_results` cap is honored both per-page (via `maxResults`) and across pages.
@@ -37,7 +37,7 @@ The server is multi-tenant by design: `base_url` is a tool argument (not env), s
 
 ## Conventions
 
-- Tests are pure-Python and don't hit the network — they cover `jql` parsing and `ResolvedIssue.from_raw`. New `jira_client` logic should be refactorable into testable pure helpers where possible rather than mocking `httpx`.
+- Tests are pure-Python and don't hit the network — they cover `jql` parsing and the `models.py` transforms. New `jira_client` logic should be refactorable into testable pure helpers where possible rather than mocking `httpx`.
 - Errors raised from the tool handler should be plain `RuntimeError` / `ValueError` with user-facing messages — the FastMCP layer surfaces those to the MCP client. Internal exceptions (`JiraAuthError` etc.) stay inside `jira_client.py`.
 - Logs go to **stderr only** — stdout is the MCP transport. Don't `print()` to stdout.
 - Use `python`, not `python3` (per global instruction).
