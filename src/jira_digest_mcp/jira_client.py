@@ -60,7 +60,7 @@ class JiraClient:
     async def __aenter__(self) -> "JiraClient":
         return self
 
-    async def __aexit__(self, *exc: Any) -> None:
+    async def __aexit__(self, *_exc: Any) -> None:
         await self.aclose()
 
     async def search_resolved(
