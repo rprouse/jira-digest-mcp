@@ -1,0 +1,26 @@
+[project]
+name = "jira-digest-mcp"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Rob Prouse", email = "rob@prouse.org" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.28.1",
+    "mcp[cli]>=1.27.1",
+    "pydantic>=2.13.4",
+]
+
+[project.scripts]
+jira-digest-mcp = "jira_digest_mcp.server:main"
+
+[build-system]
+requires = ["uv_build>=0.11.8,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
