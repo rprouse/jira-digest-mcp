@@ -130,3 +130,32 @@ installed copy:
 
 After editing a source file, restart the MCP client (or use its "reload MCP
 servers" action) to pick up the change.
+
+## Releases
+
+Releases publish to [PyPI](https://pypi.org/project/jira-digest-mcp/) automatically when a `v*` tag is pushed. The workflow lives at `.github/workflows/publish.yml` and uses PyPI [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) (OIDC) — no API token is stored in the repo.
+
+### One-time setup (already done for this repo)
+
+1. On PyPI, go to the project's **Publishing** settings and add a pending or active trusted publisher with:
+   - **Owner:** the GitHub org/user
+   - **Repository:** `jira-digest-mcp`
+   - **Workflow filename:** `publish.yml`
+   - **Environment name:** `pypi`
+2. In GitHub, create an environment named `pypi` under **Settings → Environments**. Optionally add a required-reviewer protection rule so a human has to approve each publish.
+
+### Cutting a release
+
+1. Bump `version` in `pyproject.toml` following [semantic versioning](https://semver.org/):
+   - **MAJOR** — breaking changes to the MCP tool surface (removing/renaming tools or arguments, changing types, removing response fields).
+   - **MINOR** — backward-compatible additions (new tool, new optional argument, new response field).
+   - **PATCH** — bug fixes, refactors, docs, dependency bumps that don't alter behavior.
+2. Commit the bump (and any release notes) and push to `main`.
+3. Tag the commit and push the tag:
+   ```powershell
+   git tag v0.2.0     # must match the pyproject.toml version exactly
+   git push origin v0.2.0
+   ```
+4. The `Publish to PyPI` workflow runs on the tag push, builds with `uv build`, and uploads with `uv publish`. Watch it under the repo's **Actions** tab.
+
+The tag and `pyproject.toml` version must agree — `uv build` reads the version from `pyproject.toml`, so a mismatched tag will silently publish under the wrong version number.

@@ -35,6 +35,18 @@ Four modules under `src/jira_digest_mcp/`, each with one responsibility:
 
 The server is multi-tenant by design: `base_url` is a tool argument (not env), so a single running instance can serve many Atlassian sites in one conversation.
 
+## Releases
+
+Releases are published to PyPI via `.github/workflows/publish.yml`, which fires on any pushed tag matching `v*` and uses PyPI Trusted Publishing (no token secret in the repo). See the [Releases](README.md#releases) section of the README for the human-facing release steps.
+
+**Always bump `version` in `pyproject.toml` using [semantic versioning](https://semver.org/) whenever you make changes that would warrant a release.** Bump in the same PR as the change, not after — that way `main` is always in a releasable state and the version reflects what's on disk.
+
+- **MAJOR** (`X.0.0`) — breaking changes to the MCP surface: removing/renaming a tool, removing or renaming a tool argument, changing an argument's accepted type/format, removing a response field, or changing a response field's type. Anything an existing MCP client could be relying on.
+- **MINOR** (`0.X.0`) — backward-compatible additions: new tool, new optional argument with a safe default, new response field, new env var, new opt-in behavior.
+- **PATCH** (`0.0.X`) — bug fixes, internal refactors, doc/test/CI changes, dependency bumps that don't alter behavior.
+
+When uncertain, prefer the higher bump. The git tag must match the `pyproject.toml` version exactly (e.g. tag `v0.2.0` ⇄ `version = "0.2.0"`) — `uv build` reads the version from `pyproject.toml`, not from the tag, so a mismatch silently publishes the wrong version.
+
 ## Conventions
 
 - Tests are pure-Python and don't hit the network — they cover `jql` parsing and the `models.py` transforms. New `jira_client` logic should be refactorable into testable pure helpers where possible rather than mocking `httpx`.
