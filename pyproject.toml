@@ -1,7 +1,7 @@
 [project]
 name = "jira-digest-mcp"
-version = "0.1.1"
-description = "Add your description here"
+version = "0.1.2"
+description = "MCP server exposing a get_resolved_issues tool that queries resolved Jira tickets across multiple Atlassian Cloud sites with one credential pair."
 readme = "README.md"
 authors = [
     { name = "Rob Prouse", email = "rob@prouse.org" }
