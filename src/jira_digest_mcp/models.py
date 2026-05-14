@@ -1,7 +1,8 @@
-"""Pydantic model for the lean response shape returned by get_resolved_issues."""
+"""Pydantic models for the lean response shape returned by get_resolved_issues."""
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Any
 
 from pydantic import BaseModel
@@ -60,3 +61,53 @@ class ResolvedIssue(BaseModel):
             parent_summary=_get(fields, "parent", "fields", "summary"),
             story_points=story_points,
         )
+
+
+class EpicRollup(BaseModel):
+    parent_key: str | None
+    parent_summary: str | None
+    issue_count: int
+    points_total: float
+    unestimated_count: int
+
+
+class ResolvedIssuesResponse(BaseModel):
+    total_count: int
+    issues: list[ResolvedIssue]
+    epic_rollup: list[EpicRollup]
+
+    @classmethod
+    def from_issues(cls, issues: Iterable[ResolvedIssue]) -> "ResolvedIssuesResponse":
+        issues_list = list(issues)
+        # Group by parent_key, preserving first-seen parent_summary per group.
+        groups: dict[str | None, dict[str, Any]] = {}
+        for issue in issues_list:
+            g = groups.setdefault(
+                issue.parent_key,
+                {
+                    "parent_summary": issue.parent_summary,
+                    "issue_count": 0,
+                    "points_total": 0.0,
+                    "unestimated_count": 0,
+                },
+            )
+            g["issue_count"] += 1
+            if issue.story_points is None:
+                g["unestimated_count"] += 1
+            else:
+                g["points_total"] += issue.story_points
+
+        rollup = [
+            EpicRollup(
+                parent_key=parent_key,
+                parent_summary=g["parent_summary"],
+                issue_count=g["issue_count"],
+                points_total=g["points_total"],
+                unestimated_count=g["unestimated_count"],
+            )
+            for parent_key, g in groups.items()
+        ]
+        # Stable order: by issue_count desc, then parent_key (None last) for determinism.
+        rollup.sort(key=lambda r: (-r.issue_count, r.parent_key is None, r.parent_key or ""))
+
+        return cls(total_count=len(issues_list), issues=issues_list, epic_rollup=rollup)

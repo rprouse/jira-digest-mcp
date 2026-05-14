@@ -15,6 +15,7 @@ from .jira_client import (
     JiraTransportError,
 )
 from .jql import parse_date, parse_until
+from .models import ResolvedIssuesResponse
 
 log = logging.getLogger("jira_digest_mcp")
 
@@ -48,8 +49,14 @@ def build_server(client: JiraClient) -> FastMCP:
         since: str,
         until: str | None = None,
         max_results: int = 100,
-    ) -> list[dict]:
+    ) -> dict:
         """Return resolved Jira issues for a project, shaped for executive summaries.
+
+        Returns an object with:
+            total_count: number of issues returned (after `max_results` cap)
+            issues: list of resolved issues
+            epic_rollup: per-parent aggregates (issue_count, points_total, unestimated_count),
+                sorted by issue_count desc. Issues with no parent are grouped under parent_key=null.
 
         Args:
             base_url: e.g. "https://example.atlassian.net"
@@ -88,7 +95,7 @@ def build_server(client: JiraClient) -> FastMCP:
             log.debug("transport error", exc_info=True)
             raise RuntimeError(f"Jira request to {base_url} failed: {exc}") from exc
 
-        return [i.model_dump() for i in issues]
+        return ResolvedIssuesResponse.from_issues(issues).model_dump()
 
     return mcp
 
