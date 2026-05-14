@@ -68,12 +68,65 @@ Add to your MCP client config:
 }
 ```
 
-If you installed from a checkout, point `command` at `uv` and `args` at
-`["run", "--directory", "/abs/path/to/jira-digest-mcp", "jira-digest-mcp"]`.
+If you installed from a checkout, see the [Development](#development) section
+below for the equivalent MCP client config that points at your local source.
 
 ## Development
 
+The source lives at `D:\src\AI\jira-digest-mcp`.
+
+### Setup
+
+From the repo root:
+
 ```
 uv sync
+```
+
+### Tests
+
+```
 uv run pytest -v
 ```
+
+### Running the server from source
+
+To start the stdio server directly (it will hang waiting for JSON-RPC on stdin,
+which is correct — interrupt with Ctrl-C when done):
+
+```powershell
+$env:JIRA_USERNAME = "you@example.com"
+$env:JIRA_API_TOKEN = "..."
+uv run --directory D:\src\AI\jira-digest-mcp jira-digest-mcp
+```
+
+Set `$env:LOG_LEVEL = "DEBUG"` to see request-level logs on stderr.
+
+### Pointing Claude Desktop / Claude Code at the dev checkout
+
+Use this MCP client config block to run the server from source instead of an
+installed copy:
+
+```json
+{
+  "mcpServers": {
+    "jira-digest-dev": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "D:\\src\\AI\\jira-digest-mcp",
+        "jira-digest-mcp"
+      ],
+      "env": {
+        "JIRA_USERNAME": "you@example.com",
+        "JIRA_API_TOKEN": "...",
+        "LOG_LEVEL": "DEBUG"
+      }
+    }
+  }
+}
+```
+
+After editing a source file, restart the MCP client (or use its "reload MCP
+servers" action) to pick up the change.
