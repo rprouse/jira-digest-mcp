@@ -51,7 +51,11 @@ class ResolvedIssue(BaseModel):
             assignee_display_name=_get(fields, "assignee", "displayName"),
             priority=_get(fields, "priority", "name"),
             labels=list(fields.get("labels") or []),
-            components=[c.get("name") for c in components_raw if isinstance(c, dict) and c.get("name")],
+            components=[
+                name
+                for c in components_raw
+                if isinstance(c, dict) and isinstance((name := c.get("name")), str)
+            ],
             parent_key=_get(fields, "parent", "key"),
             parent_summary=_get(fields, "parent", "fields", "summary"),
             story_points=story_points,
